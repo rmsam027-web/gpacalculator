@@ -14,7 +14,6 @@
   --green: #16a34a;
   --red: #dc2626;
   --border: rgba(255,255,255,0.15);
-  --btn-bg: #334155;
 }
 body.light {
   --bg: #f1f5f9;
@@ -22,7 +21,6 @@ body.light {
   --text: #0f172a;
   --muted: #334155;
   --border: rgba(0,0,0,0.08);
-  --btn-bg: #475569;
 }
 * { box-sizing: border-box; margin: 0; }
 body {
@@ -37,7 +35,7 @@ body {
 body.light {
   background: linear-gradient(145deg, #d1fae5, #fee2e2);
 }
-.wrap { max-width: 1200px; margin: auto; }
+.wrap { max-width: 1150px; margin: auto; }
 .card {
   background: var(--card);
   backdrop-filter: blur(12px);
@@ -84,9 +82,8 @@ h1, h2, h3 { margin-bottom: 12px; font-weight: 600; }
   cursor: pointer;
   transition: all 0.2s;
   font-size: 14px;
-  background: var(--btn-bg);
+  background: #334155;
   color: white;
-  border: 1px solid rgba(255,255,255,0.1);
 }
 .btn.primary { background: #2563eb; }
 .btn.success { background: var(--green); }
@@ -118,64 +115,11 @@ small { color: var(--muted); display: block; margin-top: 6px; }
   .grid2 { grid-template-columns: 1fr; }
   .btn { padding: 8px 12px; }
 }
-
-/* Footer Styles */
-.footer-links {
-  display: flex;
-  justify-content: center;
-  gap: 25px;
-  margin-top: 25px;
-  padding-top: 20px;
-  border-top: 1px solid var(--border);
-}
-.footer-links a {
-  color: var(--text);
-  text-decoration: none;
-  opacity: 0.8;
-  font-weight: 500;
-  cursor: pointer;
-}
-.footer-links a:hover { opacity: 1; text-decoration: underline; }
-
-/* Modal Styles */
-.modal {
-  display: none;
-  position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.6);
-  backdrop-filter: blur(6px);
-  z-index: 9999;
-  align-items: center;
-  justify-content: center;
-}
-.modal-content {
-  background: var(--card);
-  backdrop-filter: blur(20px);
-  max-width: 520px;
-  width: 90%;
-  padding: 30px;
-  border-radius: 28px;
-  color: var(--text);
-  box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-  border: 1px solid var(--border);
-  position: relative;
-  line-height: 1.7;
-}
-.close-btn {
-  position: absolute;
-  top: 15px; right: 20px;
-  font-size: 28px;
-  cursor: pointer;
-  opacity: 0.7;
-}
-.close-btn:hover { opacity: 1; }
-.modal-content a { color: #60a5fa; }
+#capture { transition: all 0.2s; }
 </style>
 </head>
 <body>
-
 <div class="wrap">
-
   <!-- Header Card -->
   <div class="card">
     <h2 id="mainTitle">🇧🇩 Bangladesh SSC & HSC GPA Calculator Pro</h2>
@@ -218,29 +162,14 @@ small { color: var(--muted); display: block; margin-top: 6px; }
     <div class="card grid2">
       <div id="results">
         <h3 id="resultTitle">📋 Result</h3>
+        <!-- dynamic content -->
       </div>
       <div>
         <small id="ruleText">✔ Optional Bonus = max(GPA-2,0) added to total points.<br>✔ Golden A+ requires A+ in all mandatory subjects.<br>✔ Calculation follows Bangladesh grading system.</small>
       </div>
     </div>
   </div>
-
-  <!-- Footer with Legal Pages (AdSense Ready) -->
-  <div class="footer-links">
-    <a id="aboutLink">📄 About Us</a>
-    <a id="contactLink">📧 Contact Us</a>
-    <a id="privacyLink">🔒 Privacy Policy</a>
-  </div>
-  <div style="text-align:center; opacity:0.8; margin-top:10px; font-size: 14px;" id="footerText">Made for Bangladeshi Students 🇧🇩</div>
-</div>
-
-<!-- Modal Popup Structure -->
-<div id="simpleModal" class="modal">
-  <div class="modal-content">
-    <span class="close-btn" onclick="document.getElementById('simpleModal').style.display='none'">&times;</span>
-    <div id="modalTitle" style="font-size: 28px; margin-bottom: 20px;"></div>
-    <div id="modalContent"></div>
-  </div>
+  <div style="text-align:center; opacity:0.8; margin-top:10px;" id="footerText">Made for Bangladeshi Students 🇧🇩</div>
 </div>
 
 <script>
@@ -260,6 +189,7 @@ const LANG = {
     optTag: ' (Optional)',
     rule: '✔ Optional Bonus = max(GPA-2,0) added to total points.\n✔ Golden A+ requires A+ in all mandatory subjects.\n✔ Calculation follows Bangladesh grading system.',
     footer: 'Made for Bangladeshi Students 🇧🇩',
+    // Subject names (for UI)
     sscMain: ['Bangla', 'English', 'Mathematics', 'Religion', 'ICT'],
     sscGroups: {
       Science: ['Physics', 'Chemistry', 'Biology', 'Bangladesh & Global Studies'],
@@ -307,9 +237,9 @@ const LANG = {
 };
 
 // ==================== STATE ====================
-let currentMode = 'SSC';
-let currentLang = 'en';
-let subjectsData = [];
+let currentMode = 'SSC';               // 'SSC' or 'HSC'
+let currentLang = 'en';               // 'en' or 'bn'
+let subjectsData = [];               // array of { id, name, isOptional }
 
 // DOM elements
 const mainTitle = document.getElementById('mainTitle');
@@ -364,10 +294,12 @@ function buildSubjectList() {
   let groupSubjects = isSSC ? t.sscGroups[group] : t.hscGroups[group];
   let optSubject = isSSC ? t.sscOpt : t.hscOpt;
   
+  // Combine: main + group (all mandatory)
   let list = [];
   [...mainSubjects, ...groupSubjects].forEach((name, idx) => {
     list.push({ id: `m${idx}`, name, isOptional: false });
   });
+  // Add optional
   list.push({ id: 'opt', name: optSubject, isOptional: true });
   
   subjectsData = list;
@@ -392,6 +324,7 @@ function renderSubjectRows() {
   });
   subjectsContainer.innerHTML = html;
   
+  // Attach input listeners
   document.querySelectorAll('#subjectsContainer input').forEach(input => {
     input.addEventListener('input', function() {
       let val = parseFloat(this.value);
@@ -416,6 +349,7 @@ function calculateResult() {
   let totalMarksSum = 0;
   let totalSubjectsCount = 0;
   
+  // Process mandatory subjects
   mandatoryInputs.forEach((inp, idx) => {
     const mark = inp.value.trim() === '' ? NaN : parseFloat(inp.value);
     const { grade, point } = getGradePoint(mark);
@@ -432,19 +366,24 @@ function calculateResult() {
         else passedMandatory++;
         if (point !== 5.0) allMandatoryAPlus = false;
       } else {
+        // no mark entered: treat as not counted? we skip for point calculation but for golden logic, if not entered, it's not A+
         allMandatoryAPlus = false;
       }
     } else {
+      // empty field: cannot be A+
       allMandatoryAPlus = false;
     }
   });
   
+  // Process optional subject
   let optPoint = 0;
+  let optMark = NaN;
   if (optInput) {
     const mark = optInput.value.trim() === '' ? NaN : parseFloat(optInput.value);
     const { grade, point } = getGradePoint(mark);
     document.getElementById(`gopt`).textContent = grade;
     document.getElementById(`popt`).textContent = point !== null ? point.toFixed(2) : '-';
+    
     if (!isNaN(mark)) {
       totalMarksSum += mark;
       totalSubjectsCount++;
@@ -452,8 +391,13 @@ function calculateResult() {
     }
   }
   
+  // Bonus calculation: max(0, optPoint - 2)
   const bonus = Math.max(0, optPoint - 2);
+  
+  // Determine fail status: any mandatory failed -> overall fail
   const isFail = failedMandatory > 0;
+  
+  // GPA calculation
   const mandatoryCount = mandatoryInputs.length;
   let gpa = 0;
   if (!isFail && mandatoryCount > 0) {
@@ -461,15 +405,17 @@ function calculateResult() {
     gpa = Math.min(5.0, gpa);
   }
   
+  // Final grade string
   let finalGradeStr = isFail ? 'F' : getLetterGrade(gpa);
   let golden = false;
-  if (!isFail && gpa === 5.0 && allMandatoryAPlus && mandatoryCount > 0) {
+  if (!isFail && gpa === 5.0 && allMandatoryAPlus && mandatoryCount > 0 && totalMandatoryPoints === mandatoryCount * 5.0) {
     finalGradeStr = t.golden;
     golden = true;
   }
   
   const avgMarks = totalSubjectsCount > 0 ? (totalMarksSum / totalSubjectsCount) : 0;
   
+  // Update results panel
   const statusBadge = isFail 
     ? `<span class="badge fail">${t.fail}</span>` 
     : `<span class="badge pass">${t.pass}</span>`;
@@ -500,6 +446,7 @@ function refreshUILanguage() {
   printBtn.innerHTML = t.print;
   warningMsg.textContent = t.warning;
   
+  // Update group options
   const sciOpt = groupSel.querySelector('option[value="Science"]');
   const comOpt = groupSel.querySelector('option[value="Commerce"]');
   const humOpt = groupSel.querySelector('option[value="Humanities"]');
@@ -521,13 +468,6 @@ function fullRender() {
   buildSubjectList();
   renderSubjectRows();
   calculateResult();
-}
-
-// ==================== MODAL FUNCTIONS (Legal Pages) ====================
-function showModal(title, contentHtml) {
-  document.getElementById('modalTitle').textContent = title;
-  document.getElementById('modalContent').innerHTML = contentHtml;
-  document.getElementById('simpleModal').style.display = 'flex';
 }
 
 // ==================== EVENT LISTENERS ====================
@@ -569,6 +509,7 @@ printBtn.addEventListener('click', () => {
 
 pngBtn.addEventListener('click', function() {
   const element = document.getElementById('printArea');
+  // Temporarily force light theme for better screenshot visibility
   const wasLight = document.body.classList.contains('light');
   if (!wasLight) document.body.classList.add('light');
   
@@ -588,43 +529,6 @@ pngBtn.addEventListener('click', function() {
     if (!wasLight) document.body.classList.remove('light');
   });
 });
-
-// Modal Trigger Buttons
-document.getElementById('aboutLink').addEventListener('click', (e) => {
-  e.preventDefault();
-  showModal('About Us', `
-    <p><strong>Bangladesh SSC & HSC GPA Calculator Pro</strong></p>
-    <p>This is a 100% free, ad-free (for now) educational tool created to assist Bangladeshi students in calculating their official GPA based on the National Curriculum grading system.</p>
-    <p>Features include: SSC/HSC toggle, Bangla & English language, Dark/Light mode, Screenshot export, and Auto Fail/Golden A+ detection.</p>
-    <p>🇧🇩 Made with dedication for the students of Bangladesh.</p>
-  `);
-});
-
-document.getElementById('contactLink').addEventListener('click', (e) => {
-  e.preventDefault();
-  showModal('Contact Us', `
-    <p>For suggestions, feedback, or business inquiries regarding this calculator, please reach out via email:</p>
-    <p>📧 <strong>hasannavid085@gmail.com</strong></p>
-    <p>We try to respond to all genuine emails within 48 hours.</p>
-    <p>Thank you for using our tool!</p>
-  `);
-});
-
-document.getElementById('privacyLink').addEventListener('click', (e) => {
-  e.preventDefault();
-  showModal('Privacy Policy', `
-    <p><strong>Last Updated: ${new Date().toLocaleDateString()}</strong></p>
-    <p>At GPA Calculator Board, we take your privacy seriously. This tool does <strong>NOT</strong> collect or store any personal information (marks, names, emails) on our servers. All GPA calculations happen live in your browser using JavaScript.</p>
-    <p><strong>Third-Party Services (Google AdSense):</strong> In the future, we may use Google AdSense to support the hosting costs of this free tool. Google uses cookies to serve ads based on a user's prior visits. You may opt out of personalized advertising by visiting <a href="https://www.google.com/settings/ads" target="_blank">Google Ads Settings</a>.</p>
-    <p>By using this website, you consent to the use of necessary cookies for functionality and optional third-party cookies for analytics/advertising.</p>
-  `);
-});
-
-// Close modal on background click
-window.onclick = (e) => {
-  const modal = document.getElementById('simpleModal');
-  if (e.target === modal) modal.style.display = 'none';
-}
 
 // Initialize
 fullRender();
